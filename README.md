@@ -1,4 +1,4 @@
-# GAME_TASK_MANAGER-by-aya
+# GAME_TASK_MANAGER
 ## サービスページ
 - https://aya-ai-coding-tools.github.io/GAME_TASK_MANAGER
 - https://aya-ai-coding-tools.github.io/GAME_TASK_MANAGER/ZZZTracker
