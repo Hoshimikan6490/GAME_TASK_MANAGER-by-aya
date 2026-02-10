@@ -1,304 +1,692 @@
 <!doctype html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ゲームタスクマネージャー</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Orbitron:wght@400;700;900&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./style.css" />
-  </head>
-  <body>
-    <div class="container">
-      <header class="header">
-        <h1 class="title">GAME TASK MANAGER</h1>
-        <p class="subtitle">原神 / ゼンレスゾーンゼロ / 崩壊スターレイル</p>
-      </header>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ゲームタスクマネージャー</title>
 
-      <!-- ゲーム選択タブ -->
-      <div class="game-tabs">
-        <button class="game-tab active" data-game="genshin">
-          <span class="game-icon">⚔️</span>
-          <span>原神</span>
-        </button>
-        <button class="game-tab" data-game="zzz">
-          <span class="game-icon">🔫</span>
-          <span>ゼンゼロ</span>
-        </button>
-        <button class="game-tab" data-game="hsr">
-          <span class="game-icon">🚄</span>
-          <span>崩スタ</span>
-        </button>
-      </div>
+		<!-- ファビコン設定 -->
+		<link
+			rel="icon"
+			type="image/png"
+			href="https://png.pngtree.com/png-vector/20250214/ourlarge/pngtree-working-contract-3d-icon-employment-agreement-symbol-for-job-regulations-and-png-image_15473283.png"
+		/>
 
-      <!-- メインコンテンツタブ -->
-      <div class="content-tabs">
-        <button class="content-tab" data-content="calendar">
-          📅 カレンダー
-        </button>
-        <button class="content-tab active" data-content="daily">
-          🌤 デイリー
-        </button>
-        <button class="content-tab" data-content="weekly">
-          🌌 ウィークリー
-        </button>
-        <button class="content-tab" data-content="wishlist">💟 Wishlist</button>
-        <button class="content-tab" data-content="events">🎉 イベント</button>
-        <button class="content-tab" data-content="update-check">
-          ❓ アプデ前
-        </button>
-      </div>
+		<link rel="stylesheet" href="./style.css" />
+	</head>
+	<body>
+		<!-- 通知バナー -->
+		<div id="notificationBanner" class="notification-banner hidden">
+			<span id="notificationText"></span>
+			<button class="close-btn" onclick="closeNotification()">×</button>
+		</div>
 
-      <!-- リセットカウントダウン -->
-      <div class="reset-info">
-        <div class="reset-item">
-          <span class="reset-label">デイリーリセットまで</span>
-          <span class="reset-time" id="dailyResetTimer">--:--:--</span>
-        </div>
-        <div class="reset-item">
-          <span class="reset-label">ウィークリーリセットまで</span>
-          <span class="reset-time" id="weeklyResetTimer">--:--:--</span>
-        </div>
-      </div>
+		<!-- ヘッダー -->
+		<header>
+			<div class="header-content">
+				<h1>ゲームタスクマネージャー</h1>
+				<div class="streak-display">
+					<span class="streak-icon">🔥</span>
+					<div class="streak-info">
+						<h3>連続達成日数</h3>
+						<span class="streak-number" id="streakCount">0</span>
+					</div>
+				</div>
+			</div>
+		</header>
 
-      <!-- コンテンツエリア -->
-      <div class="content-area">
-        <!-- カレンダー -->
-        <div class="content-panel" id="calendar-panel">
-          <div class="panel-header">
-            <h2>📅 カレンダー</h2>
-            <div class="calendar-nav">
-              <button id="prevMonth">&lt;</button>
-              <span id="currentMonth">2026年2月</span>
-              <button id="nextMonth">&gt;</button>
-            </div>
-          </div>
-          <div class="calendar-grid" id="calendarGrid"></div>
-          <div class="calendar-events" id="calendarEvents"></div>
-        </div>
+		<!-- 花火エフェクト用キャンバス -->
+		<canvas id="fireworksCanvas"></canvas>
 
-        <!-- デイリータスク -->
-        <div class="content-panel active" id="daily-panel">
-          <div class="panel-header">
-            <h2>🌤 デイリータスク</h2>
-            <div class="progress-mini">
-              <span id="dailyProgress">0/0</span>
-            </div>
-          </div>
-          <div class="task-list" id="dailyTaskList"></div>
-        </div>
+		<!-- コンボ表示 -->
+		<div id="comboDisplay" class="combo-display hidden">
+			<span class="combo-text"></span>
+		</div>
 
-        <!-- ウィークリータスク -->
-        <div class="content-panel" id="weekly-panel">
-          <div class="panel-header">
-            <h2>🌌 ウィークリータスク</h2>
-            <div class="progress-mini">
-              <span id="weeklyProgress">0/0</span>
-            </div>
-          </div>
-          <div class="task-list" id="weeklyTaskList"></div>
+		<!-- メインコンテンツ -->
+		<main>
+			<!-- タブナビゲーション -->
+			<nav class="tab-nav">
+				<button
+					class="tab-btn active"
+					data-game="zzz"
+					onclick="switchTab('zzz')"
+				>
+					ゼンレスゾーンゼロ
+				</button>
+				<button class="tab-btn" data-game="hsr" onclick="switchTab('hsr')">
+					崩壊スターレイル
+				</button>
+				<button
+					class="tab-btn"
+					data-game="genshin"
+					onclick="switchTab('genshin')"
+				>
+					原神
+				</button>
+			</nav>
 
-          <!-- 引継ぎタスク -->
-          <div
-            class="inherited-tasks"
-            id="inheritedTasks"
-            style="display: none"
-          >
-            <h3>📋 引継ぎタスク（BP対象外）</h3>
-            <div class="task-list" id="inheritedTaskList"></div>
-          </div>
+			<!-- ゼンレスゾーンゼロ タブ -->
+			<div id="zzz-content" class="tab-content active" data-game="zzz">
+				<!-- カウントダウンセクション -->
+				<section class="countdown-section">
+					<div class="countdown-card">
+						<h3>デイリーリセットまで</h3>
+						<div class="countdown-timer" id="zzz-daily-countdown">--:--:--</div>
+					</div>
+					<div class="countdown-card">
+						<h3>ウィークリーリセットまで</h3>
+						<div class="countdown-timer" id="zzz-weekly-countdown">
+							--日--時間
+						</div>
+					</div>
+				</section>
 
-          <!-- バトルパス進捗 -->
-          <div class="bp-section">
-            <div class="bp-header">
-              <h3>紀行/バトルパス進捗</h3>
-              <button class="btn-new-season" id="newSeasonBtn">
-                🔄 新シーズン開始
-              </button>
-            </div>
-            <div class="bp-info">
-              <p class="bp-note">週間上限: 10,000 EXP（1レベル = 1,000 EXP）</p>
-            </div>
-            <div class="bp-controls">
-              <label>現在のレベル:</label>
-              <input
-                type="number"
-                id="bpCurrentLevel"
-                min="0"
-                max="70"
-                value="0"
-              />
-              <label>週間獲得EXP:</label>
-              <input
-                type="number"
-                id="bpWeeklyExp"
-                min="0"
-                max="10000"
-                value="0"
-              />
-            </div>
-            <div class="bp-progress-container">
-              <div class="bp-progress-bar" id="bpProgressBar"></div>
-              <span class="bp-progress-text" id="bpProgressText"
-                >0 / 10,000 EXP</span
-              >
-            </div>
-            <div class="bp-slider-container">
-              <input
-                type="range"
-                id="bpSlider"
-                min="0"
-                max="10000"
-                value="0"
-                step="100"
-              />
-            </div>
-          </div>
-        </div>
+				<!-- プログレスセクション -->
+				<section class="countdown-section">
+					<div class="countdown-card">
+						<div class="progress-info">
+							<span>デイリー進捗</span>
+							<span id="zzz-daily-progress">0/0</span>
+						</div>
+						<div class="progress-bar">
+							<div
+								class="progress-fill"
+								id="zzz-daily-bar"
+								style="width: 0%"
+							></div>
+						</div>
+					</div>
+					<div class="countdown-card">
+						<div class="progress-info">
+							<span>ウィークリー進捗</span>
+							<span id="zzz-weekly-progress">0/0</span>
+						</div>
+						<div class="progress-bar">
+							<div
+								class="progress-fill"
+								id="zzz-weekly-bar"
+								style="width: 0%"
+							></div>
+						</div>
+					</div>
+				</section>
 
-        <!-- Wishlist -->
-        <div class="content-panel" id="wishlist-panel">
-          <div class="panel-header">
-            <h2>💟 Wishlist</h2>
-            <button class="btn-add" id="addWishBtn">+ 追加</button>
-          </div>
-          <div class="wishlist-description">
-            <p>✨ やるべきことを追加してね！</p>
-            <p class="wishlist-sub">
-              キャラ育成、武器強化、素材集めなど自由に追加できます
-            </p>
-          </div>
-          <div class="wishlist-items" id="wishlistItems"></div>
-        </div>
+				<!-- 統計セクション -->
+				<section class="stats-section">
+					<div class="stat-card">
+						<div class="stat-label">今週の完了率</div>
+						<div class="stat-value" id="zzz-weekly-rate">0%</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">今月の完了率</div>
+						<div class="stat-value" id="zzz-monthly-rate">0%</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">連続達成日数</div>
+						<div class="stat-value" id="zzz-streak">0日</div>
+					</div>
+				</section>
 
-        <!-- イベント -->
-        <div class="content-panel" id="events-panel">
-          <div class="panel-header">
-            <h2>🎉 イベント</h2>
-            <button class="btn-add" id="addEventBtn">+ 追加</button>
-          </div>
-          <div class="event-list" id="eventList"></div>
-          <div class="api-events">
-            <h3>🌐 自動取得イベント</h3>
-            <button class="btn-refresh" id="refreshEventsBtn">更新</button>
-            <div id="apiEventList"></div>
-          </div>
-        </div>
+				<!-- 統計グラフセクション -->
+				<section class="charts-section">
+					<h2>完了率統計グラフ</h2>
+					<div class="charts-grid">
+						<div class="chart-container">
+							<h3>過去7日間の完了数</h3>
+							<div class="chart-canvas">
+								<canvas id="zzz-bar-chart"></canvas>
+							</div>
+						</div>
+						<div class="chart-container">
+							<h3>今日の完了率</h3>
+							<div class="chart-canvas">
+								<canvas id="zzz-pie-chart"></canvas>
+							</div>
+						</div>
+						<div class="chart-container">
+							<h3>過去30日間の完了率推移</h3>
+							<div class="chart-canvas">
+								<canvas id="zzz-line-chart"></canvas>
+							</div>
+						</div>
+					</div>
+				</section>
 
-        <!-- アップデート前チェック -->
-        <div class="content-panel" id="update-check-panel">
-          <div class="panel-header">
-            <h2>❓ アップデート前チェック</h2>
-          </div>
-          <div class="update-date-setting">
-            <label>次回アプデ日時:</label>
-            <input type="datetime-local" id="nextUpdateDate" />
-            <button class="btn-save" id="saveUpdateDate">保存</button>
-          </div>
-          <div class="update-checklist" id="updateChecklist"></div>
-        </div>
-      </div>
-    </div>
+				<!-- 紀行セクション -->
+				<section class="battlepass-section">
+					<h2>紀行/バトルパス進捗</h2>
+					<div class="battlepass-info">
+						<div class="bp-stat">
+							<label>週間上限EXP</label>
+							<div class="bp-value">10,000</div>
+						</div>
+						<div class="bp-stat">
+							<label>現在のレベル</label>
+							<div class="bp-value" id="zzz-bp-level">1</div>
+						</div>
+						<div class="bp-stat">
+							<label>今週の獲得EXP</label>
+							<div class="bp-value" id="zzz-bp-exp">0 / 10,000</div>
+						</div>
+					</div>
+					<div class="bp-controls">
+						<input
+							type="number"
+							id="zzz-bp-level-input"
+							placeholder="レベルを入力"
+							min="1"
+							max="50"
+						/>
+						<input
+							type="number"
+							id="zzz-bp-exp-input"
+							placeholder="EXPを入力"
+							min="0"
+							max="10000"
+						/>
+						<button onclick="updateBattlePass('zzz')">更新</button>
+					</div>
+				</section>
 
-    <!-- イベント追加モーダル -->
-    <div class="modal" id="eventModal">
-      <div class="modal-content">
-        <h3>🎉 イベント追加</h3>
-        <input type="text" id="eventName" placeholder="イベント名" />
-        <input type="datetime-local" id="eventStart" placeholder="開始日時" />
-        <input type="datetime-local" id="eventEnd" placeholder="終了日時" />
-        <input type="text" id="eventReward" placeholder="報酬（原石など）" />
-        <div class="modal-buttons">
-          <button class="btn-cancel" id="cancelEvent">キャンセル</button>
-          <button class="btn-save" id="saveEvent">保存</button>
-        </div>
-      </div>
-    </div>
+				<!-- タスクセクション -->
+				<section class="tasks-section">
+					<div class="section-header">
+						<h2>タスク管理</h2>
+						<div class="section-actions">
+							<button class="btn btn-primary" onclick="openAddTaskModal('zzz')">
+								+ カスタムタスク追加
+							</button>
+							<button
+								class="btn btn-reset"
+								onclick="resetTasks('zzz', 'daily')"
+							>
+								デイリーリセット
+							</button>
+							<button class="btn btn-reset" onclick="resetTasks('zzz', 'all')">
+								全リセット
+							</button>
+						</div>
+					</div>
 
-    <!-- 新シーズン確認モーダル -->
-    <div class="modal" id="seasonModal">
-      <div class="modal-content">
-        <h3>🔄 新シーズン開始</h3>
-        <p style="margin-bottom: 20px; color: #a0a0a0">
-          バトルパス進捗をリセットしますか？<br />（レベルと週間EXPが0になります）
-        </p>
-        <div class="modal-buttons">
-          <button class="btn-cancel" id="cancelSeason">キャンセル</button>
-          <button class="btn-save btn-danger" id="confirmSeason">
-            リセット
-          </button>
-        </div>
-      </div>
-    </div>
+					<!-- タスクグリッド（2列） -->
+					<div class="tasks-grid">
+						<!-- デイリータスク（高優先度） -->
+						<div class="task-category">
+							<h3>デイリー（高優先度）</h3>
+							<ul class="task-list" id="zzz-daily-high"></ul>
+						</div>
 
-    <!-- Wishlist追加モーダル -->
-    <div class="modal" id="wishModal">
-      <div class="modal-content">
-        <h3>💟 Wishlist追加</h3>
+						<!-- デイリータスク（余裕があれば） -->
+						<div class="task-category">
+							<h3>デイリー（余裕があれば）</h3>
+							<ul class="task-list" id="zzz-daily-low"></ul>
+						</div>
 
-        <!-- タブ切り替え -->
-        <div class="wish-modal-tabs">
-          <button class="wish-modal-tab active" data-tab="select">
-            選択追加
-          </button>
-          <button class="wish-modal-tab" data-tab="manual">手動追加</button>
-        </div>
+						<!-- ウィークリータスク -->
+						<div class="task-category">
+							<h3>ウィークリー</h3>
+							<ul class="task-list" id="zzz-weekly"></ul>
+						</div>
 
-        <!-- 選択追加 -->
-        <div class="wish-tab-content active" id="wish-select-tab">
-          <div class="wish-game-select">
-            <label>ゲーム:</label>
-            <select id="wishGameSelect">
-              <option value="genshin">⚔️ 原神</option>
-              <option value="zzz">🔫 ゼンゼロ</option>
-              <option value="hsr">🚄 崩スタ</option>
-            </select>
-          </div>
-          <div class="wish-category-select">
-            <label>カテゴリ:</label>
-            <select id="wishCategorySelect">
-              <option value="daily">デイリータスク</option>
-              <option value="weekly">ウィークリータスク</option>
-              <option value="common">よくあるやりたいこと</option>
-            </select>
-          </div>
-          <div class="wish-task-list" id="wishTaskSelectList"></div>
-        </div>
+						<!-- 隔週タスク -->
+						<div class="task-category">
+							<h3>隔週</h3>
+							<ul class="task-list" id="zzz-biweekly"></ul>
+						</div>
 
-        <!-- 手動追加 -->
-        <div class="wish-tab-content" id="wish-manual-tab">
-          <div class="wish-game-select">
-            <label>ゲーム:</label>
-            <select id="wishGameManual">
-              <option value="genshin">⚔️ 原神</option>
-              <option value="zzz">🔫 ゼンゼロ</option>
-              <option value="hsr">🚄 崩スタ</option>
-            </select>
-          </div>
-          <input
-            type="text"
-            id="wishManualTitle"
-            placeholder="タイトル（例：雷電将軍を育成する）"
-          />
-          <textarea id="wishManualMemo" placeholder="メモ（任意）"></textarea>
-          <div class="wish-deadline">
-            <label
-              ><input type="checkbox" id="wishHasDeadline" />
-              期限を設定する</label
-            >
-            <input type="datetime-local" id="wishDeadline" disabled />
-          </div>
-        </div>
+						<!-- 毎月タスク -->
+						<div class="task-category">
+							<h3>毎月</h3>
+							<ul class="task-list" id="zzz-monthly"></ul>
+						</div>
 
-        <div class="modal-buttons">
-          <button class="btn-cancel" id="cancelWish">キャンセル</button>
-          <button class="btn-save" id="saveWish">追加</button>
-        </div>
-      </div>
-    </div>
-  </body>
+						<!-- その他 -->
+						<div class="task-category">
+							<h3>その他</h3>
+							<ul class="task-list" id="zzz-other"></ul>
+						</div>
+					</div>
+				</section>
+			</div>
 
-  <script src="./script.js"></script>
+			<!-- 崩壊スターレイル タブ -->
+			<div id="hsr-content" class="tab-content" data-game="hsr">
+				<!-- カウントダウンセクション -->
+				<section class="countdown-section">
+					<div class="countdown-card">
+						<h3>デイリーリセットまで</h3>
+						<div class="countdown-timer" id="hsr-daily-countdown">--:--:--</div>
+					</div>
+					<div class="countdown-card">
+						<h3>ウィークリーリセットまで</h3>
+						<div class="countdown-timer" id="hsr-weekly-countdown">
+							--日--時間
+						</div>
+					</div>
+				</section>
+
+				<!-- プログレスセクション -->
+				<section class="countdown-section">
+					<div class="countdown-card">
+						<div class="progress-info">
+							<span>デイリー進捗</span>
+							<span id="hsr-daily-progress">0/0</span>
+						</div>
+						<div class="progress-bar">
+							<div
+								class="progress-fill"
+								id="hsr-daily-bar"
+								style="width: 0%"
+							></div>
+						</div>
+					</div>
+					<div class="countdown-card">
+						<div class="progress-info">
+							<span>ウィークリー進捗</span>
+							<span id="hsr-weekly-progress">0/0</span>
+						</div>
+						<div class="progress-bar">
+							<div
+								class="progress-fill"
+								id="hsr-weekly-bar"
+								style="width: 0%"
+							></div>
+						</div>
+					</div>
+				</section>
+
+				<!-- 統計セクション -->
+				<section class="stats-section">
+					<div class="stat-card">
+						<div class="stat-label">今週の完了率</div>
+						<div class="stat-value" id="hsr-weekly-rate">0%</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">今月の完了率</div>
+						<div class="stat-value" id="hsr-monthly-rate">0%</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">連続達成日数</div>
+						<div class="stat-value" id="hsr-streak">0日</div>
+					</div>
+				</section>
+
+				<!-- 統計グラフセクション -->
+				<section class="charts-section">
+					<h2>完了率統計グラフ</h2>
+					<div class="charts-grid">
+						<div class="chart-container">
+							<h3>過去7日間の完了数</h3>
+							<div class="chart-canvas">
+								<canvas id="hsr-bar-chart"></canvas>
+							</div>
+						</div>
+						<div class="chart-container">
+							<h3>今日の完了率</h3>
+							<div class="chart-canvas">
+								<canvas id="hsr-pie-chart"></canvas>
+							</div>
+						</div>
+						<div class="chart-container">
+							<h3>過去30日間の完了率推移</h3>
+							<div class="chart-canvas">
+								<canvas id="hsr-line-chart"></canvas>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- 紀行セクション -->
+				<section class="battlepass-section">
+					<h2>紀行/バトルパス進捗</h2>
+					<div class="battlepass-info">
+						<div class="bp-stat">
+							<label>週間上限EXP</label>
+							<div class="bp-value">10,000</div>
+						</div>
+						<div class="bp-stat">
+							<label>現在のレベル</label>
+							<div class="bp-value" id="hsr-bp-level">1</div>
+						</div>
+						<div class="bp-stat">
+							<label>今週の獲得EXP</label>
+							<div class="bp-value" id="hsr-bp-exp">0 / 10,000</div>
+						</div>
+					</div>
+					<div class="bp-controls">
+						<input
+							type="number"
+							id="hsr-bp-level-input"
+							placeholder="レベルを入力"
+							min="1"
+							max="50"
+						/>
+						<input
+							type="number"
+							id="hsr-bp-exp-input"
+							placeholder="EXPを入力"
+							min="0"
+							max="10000"
+						/>
+						<button onclick="updateBattlePass('hsr')">更新</button>
+					</div>
+				</section>
+
+				<!-- タスクセクション -->
+				<section class="tasks-section">
+					<div class="section-header">
+						<h2>タスク管理</h2>
+						<div class="section-actions">
+							<button class="btn btn-primary" onclick="openAddTaskModal('hsr')">
+								+ カスタムタスク追加
+							</button>
+							<button
+								class="btn btn-reset"
+								onclick="resetTasks('hsr', 'daily')"
+							>
+								デイリーリセット
+							</button>
+							<button class="btn btn-reset" onclick="resetTasks('hsr', 'all')">
+								全リセット
+							</button>
+						</div>
+					</div>
+
+					<!-- タスクグリッド（2列） -->
+					<div class="tasks-grid">
+						<!-- デイリータスク -->
+						<div class="task-category">
+							<h3>デイリー</h3>
+							<ul class="task-list" id="hsr-daily"></ul>
+						</div>
+
+						<!-- ウィークリータスク -->
+						<div class="task-category">
+							<h3>ウィークリー</h3>
+							<ul class="task-list" id="hsr-weekly"></ul>
+						</div>
+
+						<!-- 毎月タスク -->
+						<div class="task-category">
+							<h3>毎月</h3>
+							<ul class="task-list" id="hsr-monthly"></ul>
+						</div>
+
+						<!-- その他 -->
+						<div class="task-category">
+							<h3>その他</h3>
+							<ul class="task-list" id="hsr-other"></ul>
+						</div>
+					</div>
+				</section>
+			</div>
+
+			<!-- 原神 タブ -->
+			<div id="genshin-content" class="tab-content" data-game="genshin">
+				<!-- カウントダウンセクション -->
+				<section class="countdown-section">
+					<div class="countdown-card">
+						<h3>デイリーリセットまで</h3>
+						<div class="countdown-timer" id="genshin-daily-countdown">
+							--:--:--
+						</div>
+					</div>
+					<div class="countdown-card">
+						<h3>ウィークリーリセットまで</h3>
+						<div class="countdown-timer" id="genshin-weekly-countdown">
+							--日--時間
+						</div>
+					</div>
+				</section>
+
+				<!-- プログレスセクション -->
+				<section class="countdown-section">
+					<div class="countdown-card">
+						<div class="progress-info">
+							<span>デイリー進捗</span>
+							<span id="genshin-daily-progress">0/0</span>
+						</div>
+						<div class="progress-bar">
+							<div
+								class="progress-fill"
+								id="genshin-daily-bar"
+								style="width: 0%"
+							></div>
+						</div>
+					</div>
+					<div class="countdown-card">
+						<div class="progress-info">
+							<span>ウィークリー進捗</span>
+							<span id="genshin-weekly-progress">0/0</span>
+						</div>
+						<div class="progress-bar">
+							<div
+								class="progress-fill"
+								id="genshin-weekly-bar"
+								style="width: 0%"
+							></div>
+						</div>
+					</div>
+				</section>
+
+				<!-- 統計セクション -->
+				<section class="stats-section">
+					<div class="stat-card">
+						<div class="stat-label">今週の完了率</div>
+						<div class="stat-value" id="genshin-weekly-rate">0%</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">今月の完了率</div>
+						<div class="stat-value" id="genshin-monthly-rate">0%</div>
+					</div>
+					<div class="stat-card">
+						<div class="stat-label">連続達成日数</div>
+						<div class="stat-value" id="genshin-streak">0日</div>
+					</div>
+				</section>
+
+				<!-- 統計グラフセクション -->
+				<section class="charts-section">
+					<h2>完了率統計グラフ</h2>
+					<div class="charts-grid">
+						<div class="chart-container">
+							<h3>過去7日間の完了数</h3>
+							<div class="chart-canvas">
+								<canvas id="genshin-bar-chart"></canvas>
+							</div>
+						</div>
+						<div class="chart-container">
+							<h3>今日の完了率</h3>
+							<div class="chart-canvas">
+								<canvas id="genshin-pie-chart"></canvas>
+							</div>
+						</div>
+						<div class="chart-container">
+							<h3>過去30日間の完了率推移</h3>
+							<div class="chart-canvas">
+								<canvas id="genshin-line-chart"></canvas>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- 紀行セクション -->
+				<section class="battlepass-section">
+					<h2>紀行/バトルパス進捗</h2>
+					<div class="battlepass-info">
+						<div class="bp-stat">
+							<label>週間上限EXP</label>
+							<div class="bp-value">10,000</div>
+						</div>
+						<div class="bp-stat">
+							<label>現在のレベル</label>
+							<div class="bp-value" id="genshin-bp-level">1</div>
+						</div>
+						<div class="bp-stat">
+							<label>今週の獲得EXP</label>
+							<div class="bp-value" id="genshin-bp-exp">0 / 10,000</div>
+						</div>
+					</div>
+					<div class="bp-controls">
+						<input
+							type="number"
+							id="genshin-bp-level-input"
+							placeholder="レベルを入力"
+							min="1"
+							max="50"
+						/>
+						<input
+							type="number"
+							id="genshin-bp-exp-input"
+							placeholder="EXPを入力"
+							min="0"
+							max="10000"
+						/>
+						<button onclick="updateBattlePass('genshin')">更新</button>
+					</div>
+				</section>
+
+				<!-- タスクセクション -->
+				<section class="tasks-section">
+					<div class="section-header">
+						<h2>タスク管理</h2>
+						<div class="section-actions">
+							<button
+								class="btn btn-primary"
+								onclick="openAddTaskModal('genshin')"
+							>
+								+ カスタムタスク追加
+							</button>
+							<button
+								class="btn btn-reset"
+								onclick="resetTasks('genshin', 'daily')"
+							>
+								デイリーリセット
+							</button>
+							<button
+								class="btn btn-reset"
+								onclick="resetTasks('genshin', 'all')"
+							>
+								全リセット
+							</button>
+						</div>
+					</div>
+
+					<!-- タスクグリッド（2列） -->
+					<div class="tasks-grid">
+						<!-- デイリータスク（高優先度） -->
+						<div class="task-category">
+							<h3>デイリー（高優先度）</h3>
+							<ul class="task-list" id="genshin-daily-high"></ul>
+						</div>
+
+						<!-- デイリータスク（中優先度） -->
+						<div class="task-category">
+							<h3>デイリー（中優先度）</h3>
+							<ul class="task-list" id="genshin-daily-medium"></ul>
+						</div>
+
+						<!-- デイリータスク（低優先度） -->
+						<div class="task-category">
+							<h3>デイリー（低優先度）</h3>
+							<ul class="task-list" id="genshin-daily-low"></ul>
+						</div>
+
+						<!-- ウィークリータスク -->
+						<div class="task-category">
+							<h3>ウィークリー</h3>
+							<ul class="task-list" id="genshin-weekly"></ul>
+						</div>
+
+						<!-- 毎月タスク -->
+						<div class="task-category">
+							<h3>毎月</h3>
+							<ul class="task-list" id="genshin-monthly"></ul>
+						</div>
+
+						<!-- 季節イベント -->
+						<div class="task-category">
+							<h3>季節イベント</h3>
+							<ul class="task-list" id="genshin-season"></ul>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+
+		<!-- カスタムタスク追加モーダル -->
+		<div id="addTaskModal" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h2>カスタムタスク追加</h2>
+					<button class="modal-close" onclick="closeAddTaskModal()">×</button>
+				</div>
+				<form id="addTaskForm" onsubmit="addCustomTask(event)">
+					<div class="form-group">
+						<label for="taskName">タスク名</label>
+						<input type="text" id="taskName" required />
+					</div>
+					<div class="form-group">
+						<label for="taskCategory">カテゴリ</label>
+						<select id="taskCategory" required>
+							<option value="">選択してください</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="taskPriority">優先度</label>
+						<select id="taskPriority">
+							<option value="high">高</option>
+							<option value="medium" selected>中</option>
+							<option value="low">低</option>
+						</select>
+					</div>
+					<div class="form-actions">
+						<button type="button" class="btn" onclick="closeAddTaskModal()">
+							キャンセル
+						</button>
+						<button type="submit" class="btn btn-primary">追加</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- 月次統計モーダル -->
+		<div id="statsModal" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h2>月次統計レポート</h2>
+					<button class="modal-close" onclick="closeStatsModal()">×</button>
+				</div>
+				<div class="stats-grid">
+					<div class="stat-box">
+						<h4>完了タスク数</h4>
+						<div class="value" id="stats-completed">0</div>
+					</div>
+					<div class="stat-box">
+						<h4>総タスク数</h4>
+						<div class="value" id="stats-total">0</div>
+					</div>
+					<div class="stat-box">
+						<h4>完了率</h4>
+						<div class="value" id="stats-rate">0%</div>
+					</div>
+					<div class="stat-box">
+						<h4>最長連続達成</h4>
+						<div class="value" id="stats-max-streak">0日</div>
+					</div>
+				</div>
+				<div class="form-actions">
+					<button class="btn btn-primary" onclick="closeStatsModal()">
+						閉じる
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Chart.js CDN -->
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<!-- JavaScriptファイル読み込み -->
+		<script src="./app.js"></script>
+	</body>
 </html>
